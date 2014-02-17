@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Terminal</title>
+    <script type="text/javascript" src="/socket.io/socket.io.js"></script>
+    <script type="text/javascript" src="ansi-to-html.browser.js"></script>
+    <style>
+      html, body { height: 100% }
+
+      * {
+        box-sizing: border-box;
+        padding: 0;
+        margin: 0;
+        border: 0;
+        outline: 0;
+      }
+    </style>
+  </head>
+  <body>
+    <pre id="log"></pre>
+    <input type="text" id="box" autofocus>
+    <script type="text/javascript">
+      var box = document.querySelector('#box')
+      var log = document.querySelector('#log')
+      var parser = new (require('ansi-to-html'))({ newline: true });
+
+      // connect to the socket server
+      var socket = io.connect();
+
+      function receive(type, data) {
+        var parsed = parser.toHtml(data);
+        console.log('[' + type + ']', data, parsed);
+        log.insertAdjacentHTML('beforeend', parsed);
+        setTimeout(function() {
+          document.body.scrollTop = document.body.scrollHeight;
+        });
+      }
+
+      socket.on('stdout', receive.bind(null, 'STDOUT'));
+      socket.on('stderr', receive.bind(null, 'STDERR'));
+      socket.on('close', function(code) {
+        console.log('[EXIT]', code);
+        log.insertAdjacentHTML('beforeend', '<div>PROCESS EXIT</div>');
+      });
+
+
+      var input = 0;
+      function sendChar(character) {
+        console.log('[STDIN]', character);
+        socket.emit('stdin', character);
+
+        if (character === 'BACKSPACE') {
+          if (input) {
+            input--;
+            log.removeChild(log.lastChild);
+          }
+        } else {
+          input++;
+
+          if (character === 'ENTER') {
+            input = 0;
+            character = '<br>';
+          }
+
+          log.insertAdjacentHTML('beforeend', character);
+        }
+      }
+      function parseChars(event) {
+        var value = event.target.value;
+        event.target.value = '';
+        value.split('').forEach(sendChar);
+      }
+
+      var special = {
+        16: null, 17: null, 18: null, 20: null, 91: null, 93: null,
+        112: 'F1', 113: 'F2', 114: 'F3', 115: 'F4', 116: 'F5', 117: 'F6',
+        118: 'F7', 119: 'F8', 120: 'F9', 121: 'F10', 122: 'F11', 123: 'F12',
+        33: 'PAGEUP', 34: 'PAGEDOWN',
+        36: 'HOME', 35: 'END',
+        45: 'INSERT', 46: 'DELETE',
+        37: 'LEFT', 38: 'UP', 39: 'RIGHT', 40: 'DOWN',
+        8: 'BACKSPACE', 9: 'TAB', 13: 'ENTER', 27: 'ESCAPE',
+      };
+
+      document.addEventListener('click', box.focus.bind(box));
+      box.addEventListener('keypress', parseChars);
+      box.addEventListener('keydown', parseChars);
+      box.addEventListener('keyup', function(event) {
+        var code = event.which;
+
+        if (event.ctrlKey && code == 67) // CTRL+C
+          return sendChar('FILE_END');
+
+        if (special.hasOwnProperty(code)) {
+          if (!special[code]) return;
+          return sendChar(special[code]);
+        }
+
+        if (!event.target.value.length)
+          return console.log('[CODE]', code);
+
+        parseChars(event);
+      });
+    </script>
+  </body>
+</html>

@@ -7,6 +7,7 @@ var express = require('express');
 var app = express();
 var server = app.listen(3001);
 var io = require('socket.io').listen(server);
+var isMac = process.env.TERM === 'xterm';
 
 app.configure(function(){
   app.use(express.logger('dev'));
@@ -30,8 +31,24 @@ var special = {
 io.sockets.on('connection', function (socket) {
   console.log('[CONNECTED]');
   socket.emit('info', { msg: 'The world is round, there is no up or down.' });
-
   var shell = createShell();
+
+  var input = 0;
+  function macHack(data) {
+    if (!isMac) return;
+
+    if (data === '\b') {
+      if (!input)
+        return;
+      input--;
+    } else {
+      input++;
+      if (data === '\n')
+        input = 0;
+    }
+
+    socket.emit('stdout', data);
+  }
 
   socket.on('stdin', function(data) {
     if (data.length > 1) {
@@ -41,6 +58,7 @@ io.sockets.on('connection', function (socket) {
         return console.log('cant write', data);
     }
 
+    macHack(data);
     console.log('[STDIN]', data.charCodeAt(0), data);
     shell.stdin.write(data);
   });

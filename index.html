@@ -5,7 +5,11 @@
     <script type="text/javascript" src="/socket.io/socket.io.js"></script>
     <script type="text/javascript" src="ansi-to-html.browser.js"></script>
     <style>
-      html, body { height: 100% }
+      html, body {
+        height: 100%;
+        background-color: black;
+        color: #AAA;
+      }
 
       * {
         box-sizing: border-box;
@@ -27,8 +31,22 @@
       // connect to the socket server
       var socket = io.connect();
 
+      function removeLastChar() {
+        log.removeChild(log.lastChild);
+      }
+
+      function escapeHtml(a) {
+        return a
+          .replace(/&/g, '&amp;')
+          .replace(/</g, '&lt;')
+          .replace(/>/g, '&gt;')
+      }
+
       function receive(type, data) {
-        var parsed = parser.toHtml(data);
+        if (data === '\b')
+          return removeLastChar();
+
+        var parsed = parser.toHtml(escapeHtml(data));
         console.log('[' + type + ']', data, parsed);
         log.insertAdjacentHTML('beforeend', parsed);
         setTimeout(function() {
@@ -49,6 +67,7 @@
         console.log('[STDIN]', character);
         socket.emit('stdin', character);
 
+        /*
         if (character === 'BACKSPACE') {
           if (input) {
             input--;
@@ -56,14 +75,10 @@
           }
         } else {
           input++;
-
-          if (character === 'ENTER') {
+          if (character === 'ENTER')
             input = 0;
-            character = '<br>';
-          }
-
-          log.insertAdjacentHTML('beforeend', character);
         }
+        */
       }
       function parseChars(event) {
         var value = event.target.value;

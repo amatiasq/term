@@ -31,7 +31,7 @@ var special = {
 io.sockets.on('connection', function (socket) {
   console.log('[CONNECTED]');
   socket.emit('info', { msg: 'The world is round, there is no up or down.' });
-  var shell = createShell();
+  var shell = createShell(socket);
 
   var input = 0;
   function macHack(data) {
@@ -50,6 +50,10 @@ io.sockets.on('connection', function (socket) {
     socket.emit('stdout', data);
   }
 
+  socket.on('disconnect', function() {
+    shell.kill();
+  });
+
   socket.on('stdin', function(data) {
     if (data.length > 1) {
       if (special.hasOwnProperty(data))
@@ -58,7 +62,7 @@ io.sockets.on('connection', function (socket) {
         return console.log('cant write', data);
     }
 
-    macHack(data);
+    //macHack(data);
     console.log('[STDIN]', data.charCodeAt(0), data);
     shell.stdin.write(data);
   });
@@ -85,10 +89,14 @@ io.sockets.on('connection', function (socket) {
   });
 });
 
-function createShell() {
+function createShell(socket) {
   var shell = spawn('bash', [ '-i' ]);
   shell.stdout.setEncoding('utf8');
   shell.stderr.setEncoding('utf8');
+
+  var intro = 'alias ssh="ssh -t -t"\n';
+  shell.stdin.write(intro);
+  socket.emit('stdout', intro);
   return shell;
 }
 

@@ -4,21 +4,18 @@
 
 var spawn = require('child_process').spawn;
 var express = require('express');
+var socketIO = require('socket.io');
+var errorhandler = require('errorhandler');
+
 var app = express();
-var server = app.listen(3001);
-var io = require('socket.io').listen(server);
 var isMac = process.env.TERM === 'xterm';
+var server = app.listen(3001, function() {
+  console.log('Express server listening on port 3001');
+}, console.error);
+var io = socketIO.listen(server);
 
-app.configure(function(){
-  app.use(express.logger('dev'));
-  app.use(express.static(__dirname));
-});
-
-app.configure('development', function(){
-  app.use(express.errorHandler());
-});
-
-console.log('Express server listening on port 3001');
+app.use(errorhandler());
+app.use(express.static(__dirname));
 
 var special = {
   'ENTER': '\n',
@@ -33,26 +30,11 @@ io.sockets.on('connection', function (socket) {
   socket.emit('info', { msg: 'The world is round, there is no up or down.' });
   var shell = createShell(socket);
 
-  var input = 0;
   function macHack(data) {
-    if (!isMac) return;
-
-    if (data === '\b') {
-      if (!input)
-        return;
-      input--;
-    } else {
-      input++;
-      if (data === '\n')
-        input = 0;
-    }
-
-    socket.emit('stdout', data);
+    if (isMac) socket.emit('stdout', data);
   }
 
-  socket.on('disconnect', function() {
-    shell.kill();
-  });
+  socket.on('disconnect', shell.kill.bind(shell));
 
   socket.on('stdin', function(data) {
     if (data.length > 1) {
@@ -72,8 +54,8 @@ io.sockets.on('connection', function (socket) {
     socket.emit('stdout', data);
   });
   shell.stderr.on('data', function(data) {
-    if (data.slice(0, 8) === '\x1b[?1034h')
-      data = data.slice(8);
+    //if (data.slice(0, 8) === '\x1b[?1034h')
+    //  data = data.slice(8);
 
     console.log('[STDERR]', data);
     socket.emit('stderr', data);
@@ -96,7 +78,7 @@ function createShell(socket) {
 
   var intro = 'alias ssh="ssh -t -t"\n';
   shell.stdin.write(intro);
-  socket.emit('stdout', intro);
+  //socket.emit('stdout', intro);
   return shell;
 }
 

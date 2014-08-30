@@ -86,6 +86,11 @@ AnsiParser.prototype.parseChar = function(character) {
   }
 
   if (this.code.length) {
+    if (character === 'K') {
+      this.code.length = 0;
+      return;
+    }
+
     this.code.push(character);
     if (character !== 'm')
       return;
@@ -152,7 +157,7 @@ AnsiParser.prototype.renderHtml = function(code) {
 
   var html = code.map(function(character) {
     if (character === '\n')
-      return closeSpans(character.open) + '</div><div>' + lastTag;
+      return closeSpans(character.open) + ' </div><div>' + lastTag;
 
     if (typeof character === 'string')
       return escapeHtml(character);

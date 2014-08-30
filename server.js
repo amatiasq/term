@@ -54,8 +54,11 @@ io.sockets.on('connection', function (socket) {
     socket.emit('stdout', data);
   });
   shell.stderr.on('data', function(data) {
-    //if (data.slice(0, 8) === '\x1b[?1034h')
-    //  data = data.slice(8);
+    if (data.slice(0, 8) === '\x1b[?1034h')
+      data = data.slice(8);
+
+    if (data === '\x1b[K')
+      return socket.emit('sterr', 'BACKSPACE');
 
     console.log('[STDERR]', data);
     socket.emit('stderr', data);

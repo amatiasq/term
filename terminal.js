@@ -15,7 +15,7 @@ function escapeHtml(a) {
 }
 
 function receive(type, data) {
-  if (data === '\b')
+  if (data === 'BACKSPACE')
     return removeLastChar();
 
   var code = ansi.parse(data);

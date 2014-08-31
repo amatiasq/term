@@ -10,8 +10,8 @@ module.exports = function(grunt) {
 
     files: {
       all: [
-        '!web/bundle.js',
         'web/**/*.js',
+        '!web/bundle.js',
       ],
       entry: 'web/main.js',
       output: 'web/bundle.js',

@@ -1,11 +1,6 @@
 import Stream from './tools/simple-stream';
 import socket from './socket';
 
-function send(data) {
-  console.log('[STDIN]', data);
-  socket.emit('stdin', data);
-}
-
 var special = {
   16: null, 17: null, 18: null, 20: null, 91: null, 93: null,
   112: 'F1', 113: 'F2', 114: 'F3', 115: 'F4', 116: 'F5', 117: 'F6',
@@ -51,7 +46,7 @@ class KeyboardParser extends Stream {
 
 class ServerStream extends Stream {
   write(data) {
-    console.log('[STDIN]', data);
+    //console.log('[STDIN]', data);
     socket.emit('stdin', data);
   }
 }

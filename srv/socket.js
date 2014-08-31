@@ -16,14 +16,14 @@ var special = {
 };
 
 io.sockets.on('connection', function (socket) {
-  console.log('[CONNECTED]');
+  // console.log('[CONNECTED]');
   var shell = createShell(socket);
 
   socket.on('stdin', function(data) {
     if (special.hasOwnProperty(data))
       data = special[data];
 
-    console.log('[STDIN]', data.charCodeAt(0), data);
+    // console.log('[STDIN]', data.charCodeAt(0), data);
     shell.stdin.write(data);
 
     if (isMac)
@@ -31,22 +31,22 @@ io.sockets.on('connection', function (socket) {
   });
 
   shell.stdout.on('data', function(data) {
-    console.log('[STDOUT]', data);
+    // console.log('[STDOUT]', data);
     socket.emit('stdout', data);
   });
   shell.stderr.on('data', function(data) {
     if (data.slice(0, 8) === '\x1b[?1034h')
       data = data.slice(8);
 
-    console.log('[STDERR]', data);
+    // console.log('[STDERR]', data);
     socket.emit('stderr', data);
   });
   shell.on('close', function(code) {
-    console.log('[CLOSED]', code);
+    // console.log('[CLOSED]', code);
     socket.emit('closed', code);
   });
   socket.on('disconnect', function () {
-    console.log('[DISCONNECTED]');
+    // console.log('[DISCONNECTED]');
     shell.stdin.write('\nexit\n');
   });
 });

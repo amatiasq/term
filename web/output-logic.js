@@ -1,5 +1,5 @@
 import Stream from './tools/simple-stream';
-import StreamLogger from './tools/stream-logger';
+//import StreamLogger from './tools/stream-logger';
 import AnsiParser from './tools/ansi-parser';
 import socket from './socket';
 
@@ -9,11 +9,11 @@ var stderr = Stream.fromEvent(socket, 'stderr');
 
 stderr
 	.pipe(new AnsiParser())
-	.pipe(new StreamLogger('[STDERR]'))
+	//.pipe(new StreamLogger('[STDERR]'))
 	.pipe(output);
 stdout
 	.pipe(new AnsiParser())
-	.pipe(new StreamLogger('[STDOUT]'))
+	//.pipe(new StreamLogger('[STDOUT]'))
 	.pipe(output);
 
 socket.on('close', code => {

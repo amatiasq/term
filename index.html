@@ -2,13 +2,20 @@
 <html>
   <head>
     <title>Terminal</title>
-    <link rel="stylesheet" href="ansi.css" />
+    <link rel="stylesheet" href="/web/ansi.css" />
   </head>
   <body>
-    <pre><div id="log"></div></pre>
+    <pre id="log"></pre>
     <input type="text" id="box" autofocus>
     <script type="text/javascript" src="/socket.io/socket.io.js"></script>
-    <script type="text/javascript" src="ansi.js"></script>
-    <script type="text/javascript" src="terminal.js"></script>
+    <script type="text/javascript" src="/bower_components/traceur/traceur.js"></script>
+    <script>
+      $traceurRuntime.assertObject = function(x) {
+        if (!$traceurRuntime.isObject(x))
+          throw TypeError(x + ' is not an Object');
+        return x;
+      }
+    </script>
+    <script type="text/javascript" src="/web/bundle.js"></script>
   </body>
 </html>

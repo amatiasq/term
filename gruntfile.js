@@ -9,7 +9,10 @@ module.exports = function(grunt) {
   grunt.initConfig({
 
     files: {
-      all: 'web/**/*.js',
+      all: [
+        '!web/bundle.js',
+        'web/**/*.js',
+      ],
       entry: 'web/main.js',
       output: 'web/bundle.js',
     },

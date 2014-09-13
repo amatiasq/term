@@ -1,5 +1,3 @@
-import Stream from './simple-stream';
-
 function flatten(array) {
   return Array.prototype.concat.apply([], array);
 }
@@ -49,7 +47,7 @@ var styleCodes = {
   49: { bg: defaultStyles.bg },
 };
 
-export default class AnsiParser extends Stream {
+export class AnsiParser {
 
   constructor() {
     super.constructor();
@@ -59,13 +57,12 @@ export default class AnsiParser extends Stream {
     this._lastChar = null;
   }
 
-  write(data) {
+  parse(data) {
     var output = data.split('')
       .map(this._parseChar, this)
       .filter(Boolean)
 
-    flatten(output)
-      .forEach(this._write, this);
+    return flatten(output)
   }
 
   _parseChar(character) {
@@ -117,3 +114,8 @@ export default class AnsiParser extends Stream {
     return styles;
   }
 }
+
+export default () => {
+  var parser = new AnsiParser();
+  return parser.parse.bind(parser);
+};

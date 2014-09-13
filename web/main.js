@@ -1,17 +1,16 @@
-import Stream from './tools/simple-stream';
-import HtmlRenderer from './tools/html-renderer';
+import { Observable } from 'rx';
+import { fromAnsi as render } from './tools/html-renderer';
 import output from './output-logic';
 import input from './input-logic';
 
-var renderer = new HtmlRenderer();
-
-var $log = document.querySelector('#log');
-renderer.fromAnsiStream($log, output);
+function scrollBottom() {
+  setTimeout(_=> document.body.scrollTop = document.body.scrollHeight, 0);
+}
 
 var $box = document.querySelector('#box');
-document.addEventListener('click', event => $box.focus());
 
-output.on('data', scrollBottom);
-function scrollBottom() {
-	setTimeout(_=> document.body.scrollTop = document.body.scrollHeight, 0);
-}
+Observable.fromEvent(document, 'click')
+  .subscribe(event => $box.focus());
+
+render(document.querySelector('#log'), output);
+output.subscribe(scrollBottom);

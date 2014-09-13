@@ -1,5 +1,5 @@
-import Stream from './tools/simple-stream';
 import socket from './socket';
+import { Observable } from 'rx';
 
 var special = {
   16: null, 17: null, 18: null, 20: null, 91: null, 93: null,
@@ -12,63 +12,44 @@ var special = {
   8: 'BACKSPACE', 9: 'TAB', 13: 'ENTER', 27: 'ESCAPE',
 };
 
-class StopPropagation extends Stream {
-  write(event) {
-    event.stopPropagation();
-    this._write(event);
-  }
+function stopPropagation(event) {
+  event.stopPropagation()
+  return event;
 }
 
-class SpecialKeysParser extends Stream {
-  write(event) {
-    var code = event.which;
-
-    if (event.ctrlKey && code == 67) // CTRL+C
-      return this._write('FILE_END');
-
-    if (special.hasOwnProperty(code)) {
-      if (!special[code]) return;
-      return this._write(special[code]);
-    }
-
-    if (!event.target.value.length)
-      return console.log('[CODE]', code);
-  }
+function getTypedChars(event) {
+  var value = event.target.value;
+  event.target.value = '';
+  return Observable.fromArray(value.split(''));
 }
 
-class KeyboardParser extends Stream {
-  write(event) {
-    var value = event.target.value;
-    event.target.value = '';
-    value.split('').forEach(character => this._write(character));
-  }
-}
+function specialKeysParser(event) {
+  var code = event.which;
 
-class ServerStream extends Stream {
-  write(data) {
-    //console.log('[STDIN]', data);
-    socket.emit('stdin', data);
-  }
+  if (event.ctrlKey && code == 67) // CTRL+C
+    return 'FILE_END';
+
+  if (special.hasOwnProperty(code))
+    return special[code];
 }
 
 var $box = document.querySelector('#box');
-var server = new ServerStream();
-var keyboard = new KeyboardParser();
-var keyup = Stream.fromDomEvent($box, 'keyup');
+var keyup = Observable.fromEvent($box, 'keyup');
 
-Stream.fromDomEvent($box, 'keypress')
-  .pipe(new StopPropagation())
-  .pipe(keyboard);
-Stream.fromDomEvent($box, 'keydown')
-  .pipe(new StopPropagation())
-  .pipe(keyboard);
+var specialKeys = keyup
+  .map(specialKeysParser)
+  .filter(Boolean);
 
-keyup
-  .pipe(new StopPropagation())
-  .pipe(keyboard)
-  .pipe(server);
-keyup
-  .pipe(new SpecialKeysParser())
-  .pipe(server);
+var keyboard = keyup
+  .concat(
+    Observable.fromEvent($box, 'keypress'),
+    Observable.fromEvent($box, 'keydown')
+  )
+  .map(stopPropagation)
+  .flatMap(getTypedChars)
+  .filter(Boolean);
+
+var server = Observable.merge(keyboard, specialKeys);
+server.subscribe(data => socket.emit('stdin', data));
 
 export default server;

@@ -14,64 +14,43 @@ function escapeHtml(character) {
     character;
 }
 
-export default class HtmlRenderer {
-
-  fromAnsiStream(dom, stream) {
-    var styles = {};
-    var div = document.createElement('div');
-    var span = document.createElement('span');
-
-    div.appendChild(span);
-    dom.appendChild(div);
-
-    stream.on('data', data => {
-      if (data === '\n') {
-        div = document.createElement('div');
-        dom.appendChild(div);
-        data = styles;
-      }
-
-      if (typeof data !== 'string') {
-        span = document.createElement('span');
-        span.className = this.stylesToClasses(data).join(' ');
-        div.appendChild(span);
-        styles = data;
-        return;
-      }
-
-      if (data === BACKSPACE)
-        return span.innerHTML = span.innerHTML.slice(0, -1);
-
-      span.innerHTML += escapeHtml(data);
+export function stylesToClasses(styles) {
+  return Object.keys(styles)
+    .map(key => {
+      var value = styles[key];
+      var appendix = value === true ? '' : '-' + value;
+      return 'ansi-' + key + appendix;
     });
-  }
+    //.filter(Boolean);
+}
 
-  fromLinesStream(dom, stream) {
-    stream.on('data', line => {
-      var div = document.createElement('div');
+
+export function fromAnsi(dom, observable) {
+  var styles = {};
+  var div = document.createElement('div');
+  var span = document.createElement('span');
+
+  div.appendChild(span);
+  dom.appendChild(div);
+
+  observable.subscribe(data => {
+    if (data === '\n') {
+      div = document.createElement('div');
       dom.appendChild(div);
+      data = styles;
+    }
 
-      line.on('data', block => {
-        var span = document.createElement('span');
-        div.appendChild(span);
+    if (typeof data !== 'string') {
+      span = document.createElement('span');
+      span.className = stylesToClasses(data).join(' ');
+      div.appendChild(span);
+      styles = data;
+      return;
+    }
 
-        block.on('data', data => {
-          if (typeof data === 'string')
-            span.innerHTML += escapeHtml(data);
-          else
-            span.className = this.stylesToClasses(data).join(' ');
-        });
-      });
-    });
-  }
+    if (data === BACKSPACE)
+      return span.innerHTML = span.innerHTML.slice(0, -1);
 
-  stylesToClasses(styles) {
-    return Object.keys(styles)
-      .map(key => {
-        var value = styles[key];
-        var appendix = value === true ? '' : '-' + value;
-        return 'ansi-' + key + appendix;
-      });
-      //.filter(Boolean);
-  }
+    span.innerHTML += escapeHtml(data);
+  });
 }

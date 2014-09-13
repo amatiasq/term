@@ -1,25 +1,17 @@
-import Stream from './tools/simple-stream';
-//import StreamLogger from './tools/stream-logger';
+import { Observable } from 'rx';
 import AnsiParser from './tools/ansi-parser';
 import socket from './socket';
 
-var output = new Stream();
-var stdout = Stream.fromEvent(socket, 'stdout');
-var stderr = Stream.fromEvent(socket, 'stderr');
+var stdout = Observable.fromEvent(socket, 'stdout')
+  .map(new AnsiParser())
+  .flatMap(Observable.fromArray);
+var stderr = Observable.fromEvent(socket, 'stderr')
+  .map(new AnsiParser())
+  .flatMap(Observable.fromArray);
 
-stderr
-	.pipe(new AnsiParser())
-	//.pipe(new StreamLogger('[STDERR]'))
-	.pipe(output);
-stdout
-	.pipe(new AnsiParser())
-	//.pipe(new StreamLogger('[STDOUT]'))
-	.pipe(output);
+var close = Observable.fromEvent(socket, 'close');
+var output = Observable.merge(stdout, stderr).takeUntil(close);
 
-socket.on('close', code => {
-  stdout.end();
-  stderr.end();
-  console.log('[EXIT]', code);
-});
+close.subscribe(code => console.log(`[EXIT] ${code}`));
 
 export default output;

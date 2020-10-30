@@ -1,8 +1,9 @@
+import { ClientId } from './../types';
 import { Message } from './Message';
 
 export enum ServerMessageType {
   ERROR = 'ERROR',
-  HANDSHAKE = 'HANDSHAKE',
+  CONNECTED = 'CONNECTED',
 }
 
 interface ServerMessage__ERROR extends Message<ServerMessageType> {
@@ -12,8 +13,9 @@ interface ServerMessage__ERROR extends Message<ServerMessageType> {
   };
 }
 
-interface ServerMessage__HANDSHAKE extends Message<ServerMessageType> {
-  type: ServerMessageType.HANDSHAKE;
+interface ServerMessage__CONNECTED extends Message<ServerMessageType> {
+  type: ServerMessageType.CONNECTED;
+  data: ClientId;
 }
 
-export type ServerMessage = ServerMessage__ERROR | ServerMessage__HANDSHAKE;
+export type ServerMessage = ServerMessage__ERROR | ServerMessage__CONNECTED;

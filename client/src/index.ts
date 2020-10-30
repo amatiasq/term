@@ -1,6 +1,11 @@
+import { ClientId } from './../../shared/types';
+import { ServerMessageType } from './../../shared/communication/ServerMessage';
 import { ResilientSocket } from '@amatiasq/resilient-socket';
 
-import { ClientMessage } from '../../shared/communication/ClientMessage';
+import {
+  ClientMessage,
+  ClientMessageType,
+} from '../../shared/communication/ClientMessage';
 import { ServerMessage } from '../../shared/communication/ServerMessage';
 import { DEFAULT_PORT } from '../../shared/config.json';
 import { parseJson } from '../../shared/parseJson';
@@ -14,22 +19,40 @@ const serverUri =
     : `ws://localhost:${DEFAULT_PORT}`;
 
 const socket = openSocket(serverUri);
+const client: any = {};
 
 function openSocket(uri: string) {
   const socket = new ResilientSocket(uri);
 
-  socket.onOpen(event => console.log('Socket open'));
   socket.onClose(event => console.log('Socket closed'));
   socket.onError(event => console.log('Reconnection failed'));
+
+  socket.onOpen(event => {
+    console.log('Socket open');
+    send({ type: ClientMessageType.CONNECT, data: null });
+  });
 
   socket.onReconnect(event => {
     const time = Date.now() - Number(event.disconnectedTime);
     console.log(`Disconnected for ${time} milliseconds`);
+
+    if (client.id) {
+      send({ type: ClientMessageType.RECONNECT, data: client.id });
+    } else {
+      send({ type: ClientMessageType.CONNECT, data: null });
+    }
   });
 
   socket.onMessage(event => {
-    const data = parseJson(event.data) as ServerMessage;
-    console.log('received', data);
+    const msg = parseJson(event.data) as ServerMessage;
+    const Type = ServerMessageType;
+
+    switch (msg.type) {
+      case Type.CONNECTED:
+        client.id = msg.data;
+        ready();
+        break;
+    }
   });
 
   return socket;
@@ -38,4 +61,16 @@ function openSocket(uri: string) {
 function send(message: ClientMessage) {
   console.log('sending', message);
   socket.send(JSON.stringify(message));
+}
+
+function ready() {
+  console.log('ready', client.id);
+
+  send({
+    type: ClientMessageType.OPEN,
+    data: {
+      server: 'mud.balzhur.org',
+      port: 5400,
+    },
+  });
 }

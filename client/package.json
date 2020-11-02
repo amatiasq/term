@@ -26,6 +26,8 @@
     "webpack-merge": "4.2.2"
   },
   "dependencies": {
-    "@amatiasq/socket": "^0.2.4"
+    "@amatiasq/emitter": "^4.1.1",
+    "@amatiasq/socket": "^0.2.4",
+    "ansi-to-html": "^0.6.14"
   }
 }

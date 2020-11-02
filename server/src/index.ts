@@ -1,6 +1,7 @@
 import { createServer } from 'http';
+import Telnet from 'telnet-client';
 
-import { WebSocketServer } from '@amatiasq/socket';
+import { MessageData, WebSocketServer } from '@amatiasq/socket';
 
 import { ClientMessage } from '../../client/src/ClientMessage';
 import { DEFAULT_PORT } from '../../shared/config.json';
@@ -13,7 +14,51 @@ const wss = new WebSocketServer<ServerMessage, ClientMessage>(server);
 server.listen(port, () => console.log(`Websocket server ready at ${port}`));
 
 wss.onConnection(ws => {
+  const telnet = new Telnet();
+
+  let isConnected = true;
+
+  ws.onDestroy(() => {
+    isConnected = false;
+    telnet.end();
+    console.log('DISCONNECTED');
+  });
+
   console.log('CONNECTION');
-  ws.onMessage(x => console.log(x));
-  ws.onMessageType('HANDSHAKE', () => ws.send('HANDSHAKE_BACK', undefined));
+
+  telnet.on('close', () => send('DISCONNECTED', undefined));
+  telnet.on('data', buffer => send('OUTPUT', buffer.toString()));
+
+  telnet.on('error', () => {
+    telnet.end();
+    send('DISCONNECTED', undefined);
+  });
+
+  ws.onMessageType('OPEN', async ({ host, port }) => {
+    try {
+      console.log(`Connecting to ${host}:${port}`);
+      await telnet.connect({ host: host, port });
+      console.log('Success');
+      send('CONNECTED', undefined);
+    } catch (error) {
+      send(
+        'ERROR',
+        `Can't open connection to "${host}:${port}": ${error.message}`,
+      );
+    }
+  });
+
+  ws.onMessageType('INPUT', value => {
+    console.log(value);
+    telnet.send(value);
+  });
+
+  function send<T extends ServerMessage['type']>(
+    type: T,
+    data: MessageData<ServerMessage, T>,
+  ) {
+    if (isConnected) {
+      ws.send(type, data);
+    }
+  }
 });

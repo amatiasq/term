@@ -1,22 +1,36 @@
-import { ClientSocket } from '@amatiasq/socket';
+import { RemoteTelnet } from './RemoteTelnet';
+import { socket } from './socket';
+import { Terminal } from './Terminal';
+import { getPassword } from './util/getPassword';
+import { getQueryParams } from './util/getQueryParams';
 
-import { ServerMessage } from '../../server/src/ServerMessage';
-import { DEFAULT_PORT } from '../../shared/config.json';
-import { ClientMessage } from './ClientMessage';
+const telnet = new RemoteTelnet(socket);
+const terminal = new Terminal();
 
-let FORCE_PROD_SERVER = false;
-// FORCE_PROD_SERVER = true;
+terminal.render(document.body);
 
-const serverUri =
-  location.origin === 'https://amatiasq.github.io' || FORCE_PROD_SERVER
-    ? 'wss://ts-socket.amatiasq.com'
-    : `ws://localhost:${DEFAULT_PORT}`;
+const { user, server } = getQueryParams();
+const [host, port] = server.split(':');
+const pass = getPassword(user);
 
-const socket = new ClientSocket<ClientMessage, ServerMessage>(serverUri);
+telnet.onConnected(() => telnet.send(`${user}\n${pass}\n \n \n`));
+telnet.onData(data => terminal.write(data));
 
-socket.onMessage(x => console.log('MESSAGE', x));
+socket.onConnected(() => {
+  telnet.connect({ host, port: parseInt(port) });
 
-socket.onConnected(x => {
-  console.log('SUPERPOTATO');
-  socket.send('HANDSHAKE', undefined);
+  terminal.onSubmit(value => {
+    terminal.write(`${value}\n`);
+    telnet.send(value);
+  });
+
+  document.body.addEventListener('click', () => terminal.focus());
+
+  window.onbeforeunload = () => {
+    if (telnet.isConnected) {
+      telnet.send('abandonar');
+    }
+
+    telnet.close();
+  };
 });

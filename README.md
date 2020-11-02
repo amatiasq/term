@@ -1,0 +1,1 @@
+http://localhost:8080/?user=may&server=mud.balzhur.org:5400

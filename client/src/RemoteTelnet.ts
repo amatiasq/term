@@ -23,9 +23,9 @@ export class RemoteTelnet {
   constructor(
     private readonly socket: ClientSocket<ClientMessage, ServerMessage>,
   ) {
-    socket.onMessageType('OUTPUT', this.emitData);
     socket.onMessageType('CONNECTED', this.emitConnected);
     socket.onMessageType('DISCONNECTED', this.emitClose);
+    socket.onMessageType('OUTPUT', this.emitData);
 
     this.onConnected(() => (this._isConnected = true));
     this.onClose(() => (this._isConnected = false));

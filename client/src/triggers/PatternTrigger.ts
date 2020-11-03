@@ -3,9 +3,10 @@ import { TriggerContext, TriggerHandler } from './TriggerContext';
 
 const BUFFER_LENGTH = 100;
 
-export type RegexPatternHandler = TriggerHandler<{ match: RegExpMatchArray }>;
+export type PatternContext = TriggerContext & { match: RegExpMatchArray };
+export type PatternHandler = TriggerHandler<PatternContext>;
 
-export class RegexPatternTrigger {
+export class PatternTrigger {
   private history = '';
 
   get name() {
@@ -14,11 +15,11 @@ export class RegexPatternTrigger {
 
   constructor(
     readonly pattern: RegExp,
-    private readonly handler: RegexPatternHandler,
+    private readonly handler: PatternHandler,
   ) {}
 
   test(content: string) {
-    this.history = trimEnd(this.history + content, BUFFER_LENGTH);
+    this.history = updateBuffer(content, this.history, BUFFER_LENGTH);
     return this.pattern.test(this.history);
   }
 
@@ -34,4 +35,8 @@ export class RegexPatternTrigger {
 
     this.history = '';
   }
+}
+
+function updateBuffer(content: string, buffer: string, length: number) {
+  return content.length > length ? content : trimEnd(buffer + content, length);
 }

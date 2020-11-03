@@ -1,27 +1,17 @@
-import { RemoteTelnet } from '../RemoteTelnet';
-import { TriggerCollection } from './../triggers/TriggerCollection';
-
-enum LoginStatus {
-  EXPECTING_NAME,
-  EXPECTING_PASSWORD,
-  COMPLETED,
-}
+import { Mud } from '../Mud';
 
 export class LoginMachine {
-  status = LoginStatus.EXPECTING_NAME;
-
-  constructor(
-    private readonly triggers: TriggerCollection,
-    private readonly telnet: RemoteTelnet,
-  ) {}
+  constructor(private readonly mud: Mud) {}
 
   async start(username: string, password: string) {
-    this.telnet.send(username);
+    const { mud } = this;
 
-    this.triggers.addPattern(/Pulsa \[ENTER\]/, ({ send }) => send(' '));
+    const removeEnter = mud.when('Pulsa [ENTER]', () => mud.send(' '));
 
-    await this.triggers.expectPattern(/\bPassword:/, ({ send }) =>
-      send(password),
-    );
+    mud.send(username);
+    await mud.expect('Password:');
+    mud.send(password);
+
+    setTimeout(removeEnter, 2000);
   }
 }

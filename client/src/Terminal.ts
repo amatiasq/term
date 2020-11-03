@@ -11,6 +11,10 @@ export class Terminal {
   private readonly emitSubmit = emitter<string>();
   readonly onSubmit = this.emitSubmit.subscribe;
 
+  constructor() {
+    (window as any).test = (pattern: any) => this.log.match(pattern);
+  }
+
   focus() {
     this.$input.focus();
   }

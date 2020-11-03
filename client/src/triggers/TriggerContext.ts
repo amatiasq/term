@@ -1,5 +1,5 @@
-export interface TriggerContext {
-  send(text: string): void;
-}
+export interface TriggerContext {}
 
-export type TriggerHandler<T = {}> = (context: TriggerContext & T) => void;
+export type TriggerHandler<T extends TriggerContext = TriggerContext> = (
+  context: T,
+) => void;

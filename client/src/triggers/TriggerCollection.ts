@@ -1,27 +1,27 @@
 import { TriggerContext } from './TriggerContext';
 import {
-  RegexPatternHandler,
-  RegexPatternTrigger,
-} from './RegexPatternTrigger';
+  PatternContext,
+  PatternHandler,
+  PatternTrigger,
+} from './PatternTrigger';
 
 export class TriggerCollection {
-  private readonly patterns = new Set<RegexPatternTrigger>();
+  private readonly patterns = new Set<PatternTrigger>();
+  private readonly context = {};
 
-  constructor(private readonly context: TriggerContext) {}
-
-  addPattern(pattern: RegExp, handler: RegexPatternHandler) {
-    const fixed = fixGlobalRegex(pattern);
-    const instance = new RegexPatternTrigger(fixed, handler);
+  add(pattern: RegExp | string, handler: PatternHandler) {
+    const fixed = normalizeToRegex(pattern);
+    const instance = new PatternTrigger(fixed, handler);
     this.patterns.add(instance);
     return () => this.patterns.delete(instance);
   }
 
-  expectPattern(pattern: RegExp, handler: RegexPatternHandler) {
-    return new Promise(resolve => {
-      const remove = this.addPattern(pattern, context => {
+  expect(pattern: RegExp | string) {
+    const fixed = normalizeToRegex(pattern);
+    return new Promise<PatternContext>(resolve => {
+      const remove = this.add(fixed, context => {
         remove();
-        resolve();
-        handler(context);
+        resolve(context);
       });
     });
   }
@@ -29,13 +29,29 @@ export class TriggerCollection {
   process(content: string) {
     for (const pattern of this.patterns) {
       if (pattern.test(content)) {
-        console.log(`[EXECUTE] ${pattern.name} on ${content.substr(0, 100)}`);
+        console.log(`[EXECUTE] ${pattern.name}`);
         pattern.execute(this.context);
       }
     }
   }
 }
 
+function normalizeToRegex(value: RegExp | string) {
+  if (typeof value === 'string') {
+    value = toRegex(value);
+  }
+
+  return fixGlobalRegex(value);
+}
+
+function toRegex(value: string) {
+  return new RegExp(escapeRegex(value), 'g');
+}
+
 function fixGlobalRegex(value: RegExp) {
   return value.global ? value : new RegExp(value.source, `${value.flags}g`);
+}
+
+function escapeRegex(value: string) {
+  return value.replace(/[.*+\-?^${}()|[\]\\]/g, '\\$&');
 }

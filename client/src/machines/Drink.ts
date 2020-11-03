@@ -1,27 +1,49 @@
-import { RemoteTelnet } from '../RemoteTelnet';
-import { TriggerCollection } from './../triggers/TriggerCollection';
+import { Mud } from './../Mud';
 
-enum LoginStatus {
-  EXPECTING_NAME,
-  EXPECTING_PASSWORD,
-  COMPLETED,
-}
+export class DrinkMachine {
+  private hasFont = false;
 
-export class LoginMachine {
-  status = LoginStatus.EXPECTING_NAME;
+  constructor(private readonly mud: Mud) {
+    this.thirsty = this.thirsty.bind(this);
+  }
 
-  constructor(
-    private readonly triggers: TriggerCollection,
-    private readonly telnet: RemoteTelnet,
-  ) {}
+  start() {
+    this.watchFonts();
+    this.watchThirst();
 
-  async start(username: string, password: string) {
-    this.telnet.send(username);
+    // Never ending
+    return new Promise(() => {});
+  }
 
-    this.triggers.addPattern(/Pulsa \[ENTER\]/, ({ send }) => send(' '));
-
-    await this.triggers.expectPattern(/\bPassword:/, ({ send }) =>
-      send(password),
+  private watchFonts() {
+    this.mud.when('Salidas:', () => (this.hasFont = false));
+    this.mud.when(
+      'Una hermosa fuente de marmol blanco esta aqui.',
+      () => (this.hasFont = true),
     );
+  }
+
+  private watchThirst() {
+    this.mud.when('Tienes sed.', this.thirsty);
+    this.mud.when('Estas realmente sediento.', this.thirsty);
+    this.mud.when('Estas MUERTO de SED!', this.thirsty);
+  }
+
+  async thirsty() {
+    const { mud } = this;
+
+    if (this.hasFont) {
+      mud.send('beber');
+      return;
+    }
+
+    const inventory = mud.get('inventory');
+
+    if (await inventory.hasItem('un odre de cuero')) {
+      mud.send('beber ordre');
+      return;
+    }
+
+    console.log('No hay fuente de agua');
   }
 }

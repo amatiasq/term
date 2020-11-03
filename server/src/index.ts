@@ -48,10 +48,7 @@ wss.onConnection(ws => {
     }
   });
 
-  ws.onMessageType('INPUT', value => {
-    console.log(value);
-    telnet.send(value);
-  });
+  ws.onMessageType('INPUT', value => telnet.send(value));
 
   function send<T extends ServerMessage['type']>(
     type: T,

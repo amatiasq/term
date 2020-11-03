@@ -30,15 +30,16 @@ export class Terminal {
       if (event.code === 'Enter') {
         this.submit();
       }
+
+      this.$input.size = this.$input.value.length + 1;
     });
   }
 
   write(data: string) {
     this.log += data.replace(/\r/g, '');
 
-    const html = this.convert
-      .toHtml(this.log.replace(/ /g, '&nbsp;'))
-      .replace(/\n/g, '<br>');
+    const ascii = escapeHtml(this.log).replace(/ /g, '&nbsp;');
+    const html = this.convert.toHtml(ascii).replace(/\n/g, '<br>');
 
     this.$log.innerHTML = html;
 
@@ -50,4 +51,13 @@ export class Terminal {
     this.$input.value = '';
     this.emitSubmit(value);
   }
+}
+
+function escapeHtml(unsafe: string) {
+  return unsafe
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#039;');
 }

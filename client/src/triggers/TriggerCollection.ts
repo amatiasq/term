@@ -4,32 +4,41 @@ import {
   PatternHandler,
   PatternTrigger,
 } from './PatternTrigger';
+import { TriggerOptions } from './TriggerOptions';
 
 export class TriggerCollection {
   private readonly patterns = new Set<PatternTrigger>();
   private readonly context = {};
 
-  add(pattern: RegExp | string, handler: PatternHandler) {
+  add(
+    pattern: RegExp | string,
+    handler: PatternHandler,
+    options?: TriggerOptions,
+  ) {
     const fixed = normalizeToRegex(pattern);
-    const instance = new PatternTrigger(fixed, handler);
+    const instance = new PatternTrigger(fixed, handler, options);
     this.patterns.add(instance);
     return () => this.patterns.delete(instance);
   }
 
-  expect(pattern: RegExp | string) {
+  expect(pattern: RegExp | string, options?: TriggerOptions) {
     const fixed = normalizeToRegex(pattern);
     return new Promise<PatternContext>(resolve => {
-      const remove = this.add(fixed, context => {
+      const remove = this.add(fixed, handler, options);
+      function handler(context: PatternContext) {
         remove();
         resolve(context);
-      });
+      }
     });
   }
 
   process(content: string) {
     for (const pattern of this.patterns) {
       if (pattern.test(content)) {
-        console.log(`[EXECUTE] ${pattern.name}`);
+        if (!pattern.skipLog) {
+          console.log(`[EXECUTE] ${pattern.name}`);
+        }
+
         pattern.execute(this.context);
       }
     }

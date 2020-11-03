@@ -1,7 +1,7 @@
 import { ClientSocket } from '@amatiasq/socket';
 
-import { ServerMessage } from '../../server/src/ServerMessage';
-import { DEFAULT_PORT } from '../../shared/config.json';
+import { ServerMessage } from '../../../../server/src/ServerMessage';
+import { DEFAULT_PORT } from '../../../../shared/config.json';
 import { ClientMessage } from './ClientMessage';
 
 let FORCE_PROD_SERVER = false;

@@ -1,0 +1,43 @@
+body {
+  --background-color: #1c1c1c;
+  --border-color: #484848;
+}
+
+.container {
+  height: 100%;
+  display: grid;
+  grid-template-rows: 1fr;
+  grid-template-columns: 1fr;
+  grid-template-areas: 'terminal';
+}
+
+.container.show-controls {
+  grid-template-rows: 50px auto;
+  grid-template-columns: 9fr 3fr;
+  grid-template-areas:
+    'controls sidebar'
+    'terminal sidebar';
+}
+
+.terminal {
+  grid-area: terminal;
+  overflow-x: hidden;
+  overflow-y: auto;
+}
+
+.sidebar {
+  grid-area: sidebar;
+  background-color: var(--background-color);
+  border-left: 1px solid var(--border-color);
+}
+
+.controls {
+  grid-area: controls;
+  background-color: var(--background-color);
+  border-bottom: 1px solid var(--border-color);
+}
+
+.container:not(.show-controls) .sidebar,
+.container:not(.show-controls) .controls {
+  display: none;
+}

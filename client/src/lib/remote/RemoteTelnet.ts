@@ -1,7 +1,7 @@
 import { emitter } from '@amatiasq/emitter';
 import { ClientSocket } from '@amatiasq/socket';
 
-import { ServerMessage } from '../../server/src/ServerMessage';
+import { ServerMessage } from '../../../../server/src/ServerMessage';
 import { ClientMessage } from './ClientMessage';
 
 export class RemoteTelnet {

@@ -1,5 +1,6 @@
 import { trimEnd } from '../util/trimEnd';
 import { TriggerContext, TriggerHandler } from './TriggerContext';
+import { TriggerOptions } from './TriggerOptions';
 
 const BUFFER_LENGTH = 100;
 
@@ -8,6 +9,7 @@ export type PatternHandler = TriggerHandler<PatternContext>;
 
 export class PatternTrigger {
   private history = '';
+  readonly skipLog: boolean;
 
   get name() {
     return this.pattern.toString();
@@ -16,7 +18,10 @@ export class PatternTrigger {
   constructor(
     readonly pattern: RegExp,
     private readonly handler: PatternHandler,
-  ) {}
+    { skipLog }: TriggerOptions = {},
+  ) {
+    this.skipLog = skipLog || false;
+  }
 
   test(content: string) {
     this.history = updateBuffer(content, this.history, BUFFER_LENGTH);

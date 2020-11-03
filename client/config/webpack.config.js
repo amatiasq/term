@@ -6,7 +6,7 @@ const CopyWebpackPlugin = require('copy-webpack-plugin');
 
 const webpackMerge = require('webpack-merge');
 
-const modeConfig = (env) => require(`./webpack.${env}`)(env);
+const modeConfig = env => require(`./webpack.${env}`)(env);
 
 module.exports = ({ mode, presets } = { mode: 'production', presets: [] }) => {
   return webpackMerge(
@@ -20,6 +20,16 @@ module.exports = ({ mode, presets } = { mode: 'production', presets: [] }) => {
             test: /\.tsx?$/,
             use: 'ts-loader',
             exclude: /node_modules/,
+          },
+          {
+            test: /\.html$/i,
+            exclude: /node_modules/,
+            loader: 'html-loader',
+          },
+          {
+            test: /\.css$/i,
+            exclude: /node_modules/,
+            use: ['style-loader', 'css-loader'],
           },
           {
             test: /\.(png|jpg|bmp)$/,

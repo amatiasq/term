@@ -9,6 +9,7 @@ export class LoginMachine {
     const removeEnter = mud.when('Pulsa [ENTER]', () => mud.send(' '));
 
     mud.send(username);
+    console.log('Name sent, expecting password');
     await mud.expect('Password:');
     mud.send(password);
 

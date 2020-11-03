@@ -1,10 +1,23 @@
 import { Mud } from './../Mud';
 
+const thirsty = [
+  'Te apetece dar un sorbo a algo refrescante.',
+  'Tienes sed.',
+  'Estas realmente sediento.',
+  'Estas MUERTO de SED!',
+];
+
 export class DrinkMachine {
   private hasFont = false;
+  private isBottleFull = false;
+
+  get inventory() {
+    return this.mud.get('inventory');
+  }
 
   constructor(private readonly mud: Mud) {
     this.thirsty = this.thirsty.bind(this);
+    this.fontAvailable = this.fontAvailable.bind(this);
   }
 
   start() {
@@ -17,16 +30,15 @@ export class DrinkMachine {
 
   private watchFonts() {
     this.mud.when('Salidas:', () => (this.hasFont = false));
+    this.mud.when('Un manantial magico esta aqui.', this.fontAvailable);
     this.mud.when(
       'Una hermosa fuente de marmol blanco esta aqui.',
-      () => (this.hasFont = true),
+      this.fontAvailable,
     );
   }
 
   private watchThirst() {
-    this.mud.when('Tienes sed.', this.thirsty);
-    this.mud.when('Estas realmente sediento.', this.thirsty);
-    this.mud.when('Estas MUERTO de SED!', this.thirsty);
+    thirsty.forEach(x => this.mud.when(x, this.thirsty));
   }
 
   async thirsty() {
@@ -34,16 +46,38 @@ export class DrinkMachine {
 
     if (this.hasFont) {
       mud.send('beber');
+      this.isBottleFull = false;
       return;
     }
 
-    const inventory = mud.get('inventory');
+    const bottle = await this.getWaterBottle();
 
-    if (await inventory.hasItem('un odre de cuero')) {
-      mud.send('beber ordre');
+    if (bottle) {
+      mud.send(`beber ${bottle}`);
       return;
     }
 
     console.log('No hay fuente de agua');
+  }
+
+  private async fontAvailable() {
+    this.hasFont = true;
+
+    if (this.isBottleFull) {
+      return;
+    }
+
+    const bottle = await this.getWaterBottle();
+
+    if (bottle) {
+      this.mud.send(`llenar ${bottle}`);
+      this.isBottleFull = true;
+    }
+  }
+
+  private async getWaterBottle() {
+    if (await this.inventory.hasItem('un odre de cuero')) {
+      return 'odre';
+    }
   }
 }

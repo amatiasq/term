@@ -21,7 +21,9 @@ export class PatternResult {
 
   get groups(): Record<string, string> {
     return this.regexes
-      .map(x => this.haystack.match(x)?.groups!)
+      .map(x => this.haystack.match(x)!)
+      .filter(Boolean)
+      .map(x => x.groups!)
       .filter(Boolean)
       .reduce(merge, {});
   }

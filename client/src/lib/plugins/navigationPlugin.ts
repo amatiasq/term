@@ -41,7 +41,8 @@ export function navigationPlugin({ watch, waitFor, write }: PluginContext) {
   }
 
   function isClosed(direction: string) {
-    return get(direction)?.includes('(cerrada)');
+    const dir = get(direction);
+    return dir && dir.includes('(cerrada)');
   }
 
   async function execute(pattern: string) {

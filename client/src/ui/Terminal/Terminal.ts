@@ -29,8 +29,13 @@ export class Terminal {
   }
 
   render(parent: HTMLElement) {
+    this.dom.$('.terminal').addEventListener('click', () => {
+      this.$input.focus();
+    });
+
     // TODO: watch keypress and/or keyup?
     this.$input.addEventListener('keydown', this.onKey);
+
     parent.appendChild(this.dom);
   }
 
@@ -87,8 +92,7 @@ export class Terminal {
 
 function asciiToHtml(text: string) {
   const escaped = escapeHtml(text);
-  const whitespace = escaped.replace(/ /g, '&nbsp;');
-  const html = convert.toHtml(whitespace);
+  const html = convert.toHtml(escaped);
   return html.replace(/\n/g, '<br>');
 }
 
@@ -102,5 +106,6 @@ function escapeHtml(unsafe: string) {
     .replace(/</g, '&lt;')
     .replace(/>/g, '&gt;')
     .replace(/"/g, '&quot;')
-    .replace(/'/g, '&#039;');
+    .replace(/'/g, '&#039;')
+    .replace(/  +/g, x => '&nbsp;'.repeat(x.length));
 }

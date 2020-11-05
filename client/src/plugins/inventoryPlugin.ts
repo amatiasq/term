@@ -1,4 +1,4 @@
-import { PluginContext } from '../PluginContext';
+import { PluginContext } from '../lib/PluginContext';
 
 export function inventoryPlugin({ watch, write, waitFor }: PluginContext) {
   let isInitialized = true;

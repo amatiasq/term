@@ -5,11 +5,14 @@ export async function train({
   invokeWorkflow,
   plugins: { navigation: nav },
 }: Context) {
+  const enemies: string[] = [];
   let isFighting = false;
   let direction = 'sur';
 
   await nav.recall();
   await nav.go('abajo');
+
+  const hunt = (prey: string) => () => enemies.push(prey);
 
   watch(
     [
@@ -42,27 +45,28 @@ export async function train({
 
   return nextRoom();
 
-  function hunt(prey: string) {
-    return async () => {
-      isFighting = true;
-      await invokeWorkflow('fight', [prey]);
-      isFighting = false;
-      nextRoom();
-    };
-  }
-
   async function nextRoom(): Promise<any> {
+    while (enemies.length) {
+      await fight(enemies.pop()!);
+    }
+
     if (nav.canGo(direction)) {
       await nav.go(direction);
-    } else if (nav.canGo('east')) {
-      await nav.go('east');
+    } else if (nav.canGo('este')) {
+      await nav.go('este');
       direction = direction === 'sur' ? 'norte' : 'sur';
     } else {
       return;
     }
 
-    if (!isFighting) {
-      return nextRoom();
-    }
+    return nextRoom();
+  }
+
+  async function fight(prey: string) {
+    console.log('FIGHT STARTS');
+    isFighting = true;
+    await invokeWorkflow('fight', [prey]);
+    isFighting = false;
+    console.log('FIGHT ENDS');
   }
 }

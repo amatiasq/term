@@ -1,4 +1,4 @@
-import { PluginContext } from '../PluginContext';
+import { PluginContext } from '../lib/PluginContext';
 import { chatPlugin } from './chatPlugin';
 import { inventoryPlugin } from './inventoryPlugin';
 import { navigationPlugin } from './navigationPlugin';

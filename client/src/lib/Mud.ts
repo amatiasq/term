@@ -2,7 +2,7 @@ import { emitter } from '@amatiasq/emitter';
 
 import { login } from './login';
 import { PluginContext } from './PluginContext';
-import { initializePlugins, PluginMap } from './plugins/index';
+import { initializePlugins, PluginMap } from '../plugins/index';
 import { RemoteTelnet } from './remote/RemoteTelnet';
 import { TriggerCollection } from './triggers/TriggerCollection';
 import { Context } from './workflow/Context';
@@ -18,6 +18,9 @@ export class Mud {
   private readonly emitCommand = emitter<string>();
   readonly onCommand = this.emitCommand.subscribe;
 
+  private emitLoggedIn!: (usernamne: string) => void;
+  readonly whenLoggedIn = new Promise(resolve => (this.emitLoggedIn = resolve));
+
   constructor(private readonly telnet: RemoteTelnet) {
     this.send = this.send.bind(this);
     this.invokeWorkflow = this.invokeWorkflow.bind(this);
@@ -32,6 +35,8 @@ export class Mud {
     this.plugins = await initializePlugins(
       name => new PluginContext(name, user, this.triggers, this.send),
     );
+
+    this.emitLoggedIn(user);
   }
 
   send(text: string) {
@@ -43,7 +48,7 @@ export class Mud {
     return this.plugins[name];
   }
 
-  addWorkflow<Args extends any[]>(
+  registerWorkflow<Args extends any[]>(
     run: (context: Context, ...args: Args) => Promise<any> | void,
   ) {
     const workflow = new Workflow(run);
@@ -51,19 +56,27 @@ export class Mud {
     return workflow;
   }
 
-  async invokeWorkflow(name: string, params: any[] = []) {
+  invokeWorkflow(name: string, params: any[] = []) {
     if (!(name in this.workflows)) {
       throw new WorkflowNotFoundError(`Workflow ${name} is not registered.`);
     }
 
     const workflow = this.workflows[name];
     const context = this.createWorkflowContext(name);
-    const result = await workflow.execute(context, ...params);
-    context.dispose();
-    return result;
+
+    const promise = workflow.execute(context, ...params).then(result => {
+      context.dispose();
+      return result;
+    });
+
+    return Object.assign(promise, {
+      abort() {
+        context.abort();
+      },
+    });
   }
 
-  private createWorkflowContext(name: string) {
+  private createWorkflowContext(name: string): Context {
     return new Context(
       name,
       this.username,

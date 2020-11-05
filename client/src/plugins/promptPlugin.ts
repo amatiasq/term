@@ -1,6 +1,6 @@
 import { emitter } from '@amatiasq/emitter';
 
-import { PluginContext } from '../PluginContext';
+import { PluginContext } from '../lib/PluginContext';
 
 const PROMPT = [
   '&W<',
@@ -65,11 +65,6 @@ export async function promptPlugin({ watch, waitFor, write }: PluginContext) {
     stats.gold = toInt(g.gold);
     stats.enemy = g.enemy ? toInt(g.enemy) : null;
     isInvisible = Boolean(g.invis);
-
-    if (stats.enemy) {
-      console.log(stats.enemy);
-    }
-
     update(stats);
   });
 
@@ -79,7 +74,7 @@ export async function promptPlugin({ watch, waitFor, write }: PluginContext) {
     onUpdate: update.subscribe,
 
     get isExhausted() {
-      return stats.mv.current > 15;
+      return stats.mv.current <= 15;
     },
 
     get isInjured() {

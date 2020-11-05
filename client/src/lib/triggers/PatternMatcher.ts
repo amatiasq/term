@@ -18,19 +18,20 @@ export class PatternMatcher {
       options.captureLength ||
       Math.max(...this.patterns.map(x => String(x).length)) * 10;
 
-    this.buffer = buffer(length);
+    this.buffer = buffer(this.length);
   }
 
   process(text: string) {
     const value = this.buffer(text);
     const matching = this.patterns.filter(pattern =>
-      this.testPattern(text, pattern),
+      this.testPattern(value, pattern),
     );
 
     if (!matching.length) {
       return;
     }
 
+    this.buffer.clear();
     const result = new PatternResult(matching, value);
     this.handler(result);
   }
@@ -46,5 +47,7 @@ export class PatternMatcher {
 
 function buffer(length: number) {
   let value = '';
-  return (text: string) => (value = trimEnd(`${value}${text}`, length));
+  const clear = () => (value = '');
+  const add = (text: string) => (value = trimEnd(`${value}${text}`, length));
+  return Object.assign(add, { clear });
 }

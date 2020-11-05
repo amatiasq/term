@@ -1,5 +1,7 @@
+import bindAll from 'lodash.bindall';
+
 import { PluginContext } from '../PluginContext';
-import { PluginMap } from '../plugins/index';
+import { PluginMap } from '../../plugins/index';
 import { TriggerCollection } from '../triggers/TriggerCollection';
 import { MissingPluginError } from './MissingPluginError';
 
@@ -18,9 +20,12 @@ export class Context extends PluginContext {
   ) {
     super(`W(${name})`, username, triggers, send);
     this.plugins = createPluginsGetter(plugins, this.log.bind(this));
+
+    bindAll(this, ['invokeWorkflow']);
   }
 
   invokeWorkflow<T>(name: string, params: any[] = []) {
+    this.checkNotAborted();
     this.log(`Invoke workflow ${name} with`, ...params);
     return this.runWorkflow<T>(name, params);
   }

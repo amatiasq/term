@@ -32,18 +32,18 @@ socket.onConnected(() => {
   };
 });
 
-function initializeMud() {
+async function initializeMud() {
   const mud = new Mud(telnet);
-  mud.login(user, pass);
   mud.onCommand(x => terminal.write(`${x}\n`));
 
+  await mud.login(user, pass);
   registerWorkflows(mud);
-  connectStats();
+  await connectStats();
   connectButtons();
 
   Object.assign(window, { mud });
 
-  function connectStats() {
+  async function connectStats() {
     const hp = emitter<number>();
     controls.addMeter('red', hp.subscribe);
 

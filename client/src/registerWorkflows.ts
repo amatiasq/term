@@ -1,8 +1,12 @@
 import { Mud } from './lib/Mud';
 import { drink } from './workflows/drink';
+import { fight } from './workflows/fight';
 import { train } from './workflows/train';
 
 export function registerWorkflows(mud: Mud) {
-  mud.addWorkflow(drink);
-  mud.addWorkflow(train);
+  mud.registerWorkflow(drink);
+  mud.registerWorkflow(fight);
+  mud.registerWorkflow(train);
+
+  mud.invokeWorkflow('drink');
 }

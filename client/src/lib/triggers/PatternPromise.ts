@@ -13,10 +13,14 @@ export class PatternPromise<T>
       reject: (reason?: any) => void,
     ) => void,
   ) {
+    let _reject!: (reason?: any) => void;
+
     super((resolve, reject) => {
-      this.forceReject = reject;
+      _reject = reject;
       executor(resolve, reject);
     });
+
+    this.forceReject = _reject;
   }
 
   timeout(seconds: number) {

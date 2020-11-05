@@ -1,6 +1,6 @@
 import { emitter } from '@amatiasq/emitter';
 
-import { PluginContext } from '../PluginContext';
+import { PluginContext } from '../lib/PluginContext';
 
 export function navigationPlugin({ watch, waitFor, write }: PluginContext) {
   let isNavigating = false;

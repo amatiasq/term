@@ -1,4 +1,4 @@
-import { PluginContext } from './engine/PluginContext';
+import { PluginContext } from './PluginContext';
 import { wait } from './util/wait';
 
 export async function login(

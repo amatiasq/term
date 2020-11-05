@@ -4,15 +4,15 @@ import Convert from 'ansi-to-html';
 
 import { emitter } from '@amatiasq/emitter';
 
-import { renderHtml } from '../util/renderHtml';
+import { render } from '../render';
 import html from './Terminal.html';
 
 const convert = new Convert();
 
 export class Terminal {
-  private readonly $fragment = renderHtml(html);
-  private readonly $log = this.$fragment.querySelector('.log')!;
-  private readonly $input = this.$fragment.querySelector('input')!;
+  private readonly dom = render(html);
+  private readonly $log = this.dom.$('.log');
+  private readonly $input = this.dom.$<HTMLInputElement>('input');
   private readonly log: string[] = [];
   private readonly history: string[] = [];
   private historyPosition = 0;
@@ -31,7 +31,7 @@ export class Terminal {
   render(parent: HTMLElement) {
     // TODO: watch keypress and/or keyup?
     this.$input.addEventListener('keydown', this.onKey);
-    parent.appendChild(this.$fragment);
+    parent.appendChild(this.dom);
   }
 
   write(data: string) {

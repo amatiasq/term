@@ -1,4 +1,4 @@
-import { trimEnd } from '../../util/trimEnd';
+import { trimEnd } from '../util/trimEnd';
 import { Pattern, SinglePattern } from './Pattern';
 import { PatternOptions } from './PatternOptions';
 import { PatternResult } from './PatternResult';

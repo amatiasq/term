@@ -1,5 +1,6 @@
 import { emitter } from '@amatiasq/emitter';
-import { PluginContext } from './../engine/PluginContext';
+
+import { PluginContext } from '../PluginContext';
 
 const PROMPT = [
   '&W<',
@@ -32,7 +33,7 @@ class Stat {
   total = 0;
   current = 0;
 
-  get normalized() {
+  get percent() {
     return this.total ? (1 / this.total) * this.current : 0;
   }
 }
@@ -75,21 +76,22 @@ export async function promptPlugin({ watch, waitFor, write }: PluginContext) {
   return {
     waitForPrompt,
     getPercent,
+    onUpdate: update.subscribe,
 
     get isExhausted() {
       return stats.mv.current > 15;
     },
 
     get isInjured() {
-      return stats.hp.normalized !== 1;
+      return stats.hp.percent !== 1;
     },
 
     get needsHospital() {
-      return stats.hp.normalized < 0.3;
+      return stats.hp.percent < 0.3;
     },
 
     get isInDanger() {
-      return stats.hp.normalized < 0.1;
+      return stats.hp.percent < 0.1;
     },
 
     get isInvisible() {
@@ -107,7 +109,7 @@ export async function promptPlugin({ watch, waitFor, write }: PluginContext) {
   }
 
   function getPercent(stat: 'hp' | 'mana' | 'mv') {
-    return stats[stat].normalized;
+    return stats[stat].percent;
   }
 }
 

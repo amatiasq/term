@@ -1,9 +1,9 @@
-import { Pattern } from '../trigger/Pattern';
-import { PatternMatchSubscription } from '../trigger/PatternMatchSubscription';
-import { PatternOptions } from '../trigger/PatternOptions';
-import { PatternResult } from '../trigger/PatternResult';
-import { TriggerCollection } from '../trigger/TriggerCollection';
-import { wait } from '../util/wait';
+import { Pattern } from './triggers/Pattern';
+import { PatternMatchSubscription } from './triggers/PatternMatchSubscription';
+import { PatternOptions } from './triggers/PatternOptions';
+import { PatternResult } from './triggers/PatternResult';
+import { TriggerCollection } from './triggers/TriggerCollection';
+import { wait } from './util/wait';
 
 export class PluginContext {
   protected readonly subscriptions: PatternMatchSubscription[] = [];
@@ -25,11 +25,15 @@ export class PluginContext {
   watch(
     pattern: Pattern,
     handler: (result: PatternResult) => void,
-    options?: PatternOptions,
+    options?: PatternOptions & { keepAlive?: true },
   ) {
     this.log('[WATCH]', pattern);
     const subscription = this.triggers.add(pattern, handler, options);
-    this.subscriptions.push(subscription);
+
+    if (options && options.keepAlive === true) {
+      this.subscriptions.push(subscription);
+    }
+
     return subscription;
   }
 

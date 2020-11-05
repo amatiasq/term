@@ -1,6 +1,8 @@
+import { ClientStorage } from '@amatiasq/client-storage';
+
 export function getPassword(user: string) {
-  const key = `pass:${user}`;
-  const stored = localStorage.getItem(key);
+  const storage = new ClientStorage<string>(`pass:${user}`);
+  const stored = storage.get();
 
   if (stored) {
     return stored;
@@ -12,6 +14,6 @@ export function getPassword(user: string) {
     throw new Error(`Password required`);
   }
 
-  localStorage.setItem(key, input);
+  storage.set(input);
   return input;
 }

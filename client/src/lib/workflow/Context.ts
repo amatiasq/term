@@ -1,6 +1,6 @@
-import { PluginContext } from '../engine/PluginContext';
+import { PluginContext } from '../PluginContext';
 import { PluginMap } from '../plugins/index';
-import { TriggerCollection } from '../trigger/TriggerCollection';
+import { TriggerCollection } from '../triggers/TriggerCollection';
 import { MissingPluginError } from './MissingPluginError';
 
 type WorkflowRunner = <T>(name: string, params: any[]) => Promise<T>;
@@ -10,12 +10,13 @@ export class Context extends PluginContext {
 
   constructor(
     name: string,
+    username: string,
     triggers: TriggerCollection,
     plugins: PluginMap,
     send: (command: string) => void,
     private readonly runWorkflow: WorkflowRunner,
   ) {
-    super(`W(${name})`, triggers, send);
+    super(`W(${name})`, username, triggers, send);
     this.plugins = createPluginsGetter(plugins, this.log.bind(this));
   }
 

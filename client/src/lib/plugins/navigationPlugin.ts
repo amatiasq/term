@@ -1,19 +1,26 @@
-import { PluginContext } from './../engine/PluginContext';
+import { emitter } from '@amatiasq/emitter';
+
+import { PluginContext } from '../PluginContext';
 
 export function navigationPlugin({ watch, waitFor, write }: PluginContext) {
   let isNavigating = false;
   let directions: string[] = [];
 
+  const roomChanged = emitter<string[]>();
+
   watch(/\nSalidas: ([^\.]+)/, ({ captured }) => {
     directions = captured[1].split(' ');
+    roomChanged(directions);
     isNavigating = false;
   });
 
   return {
-    recall,
     canGo,
     go,
     execute,
+    recall,
+    waitForRecall,
+    onRoomChange: roomChanged.subscribe,
 
     get isNavigating() {
       return isNavigating;
@@ -23,6 +30,10 @@ export function navigationPlugin({ watch, waitFor, write }: PluginContext) {
   function recall() {
     write('recall');
     return waitFor('Plaza de Darkhaven').wait(1);
+  }
+
+  function waitForRecall() {
+    return waitFor('Plaza de Darkhaven');
   }
 
   function canGo(direction: string) {

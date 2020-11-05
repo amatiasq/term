@@ -1,18 +1,33 @@
-import { PluginContext } from '../engine/PluginContext';
-import { chatPlugin } from './ChatPlugin';
-import { inventoryPlugin } from './InventoryPlugin';
-import { navigationPlugin } from './NavigationPlugin';
-import { promptPlugin } from './PromptPlugin';
+import { PluginContext } from '../PluginContext';
+import { chatPlugin } from './chatPlugin';
+import { inventoryPlugin } from './inventoryPlugin';
+import { navigationPlugin } from './navigationPlugin';
+import { promptPlugin } from './promptPlugin';
 
-export type PluginMap = ReturnType<typeof initializePlugins>;
+const plugins = {
+  chat: chatPlugin,
+  inventory: inventoryPlugin,
+  navigation: navigationPlugin,
+  prompt: promptPlugin,
+};
 
-export function initializePlugins(
-  createContext: (name: string) => PluginContext,
+// -- Dirty implementation
+
+type plugins = typeof plugins;
+type UnPromisify<T> = T extends Promise<infer U> ? U : T;
+
+export type PluginMap = {
+  [name in keyof plugins]: UnPromisify<ReturnType<plugins[name]>>;
+};
+
+export async function initializePlugins(
+  context: (name: string) => PluginContext,
 ) {
-  return {
-    chat: chatPlugin(createContext('chat')),
-    inventory: inventoryPlugin(createContext('inventory')),
-    navigation: navigationPlugin(createContext('navigation')),
-    prompt: promptPlugin(createContext('prompt')),
-  };
+  const promises = Object.entries(plugins).map(async ([name, plugin]) => [
+    name,
+    await plugin(context(name)),
+  ]);
+
+  const entries = await Promise.all(promises);
+  return Object.fromEntries(entries) as PluginMap;
 }

@@ -1,7 +1,8 @@
-import { PatternResult } from './../trigger/PatternResult';
-import { PluginContext } from '../engine/PluginContext';
-import { requestNotificationPermission } from '../util/requestNotificationPermission';
 import { ClientStorage } from '@amatiasq/client-storage';
+
+import { PluginContext } from '../PluginContext';
+import { PatternResult } from '../triggers/PatternResult';
+import { requestNotificationPermission } from '../util/requestNotificationPermission';
 
 interface Message {
   time: number;

@@ -1,17 +1,19 @@
-import { Hamburger } from './Hamburger';
+import { ClientStorage } from '@amatiasq/client-storage';
 import './index.css';
 
-import { Controls } from './Controls';
-import { Sidebar } from './Sidebar';
-import { Terminal } from './Terminal';
-import { renderHtml } from '../util/renderHtml';
-
+import { Controls } from './Controls/Controls';
+import { Hamburger } from './Hamburger/Hamburger';
 import html from './index.html';
-import './index.css';
+import { render } from './render';
+import { Sidebar } from './Sidebar/Sidebar';
+import { Terminal } from './Terminal/Terminal';
 
 export function renderUserInterface(parent: HTMLElement) {
-  const fragment = renderHtml(html);
-  const main = fragment.querySelector('.container') as HTMLElement;
+  const state = initState();
+  const data = state.get()!;
+
+  const dom = render(html);
+  const main = dom.$('.container');
 
   const sidebar = new Sidebar();
   sidebar.render(main);
@@ -22,17 +24,33 @@ export function renderUserInterface(parent: HTMLElement) {
   const terminal = new Terminal();
   terminal.render(main);
 
-  parent.appendChild(fragment);
+  parent.appendChild(dom);
 
-  const hamburger = new Hamburger('ui:controls-visible');
-
-  hamburger.onChange(x =>
-    x
-      ? main.classList.add('show-controls')
-      : main.classList.remove('show-controls'),
-  );
-
+  const hamburger = new Hamburger(data.showControls);
   hamburger.render(parent);
 
+  hamburger.onChange(x => {
+    if (x) {
+      main.classList.add('show-controls');
+      data.showControls = true;
+    } else {
+      main.classList.remove('show-controls');
+      data.showControls = false;
+    }
+
+    state.set(data);
+  });
+
   return { controls, sidebar, terminal };
+}
+
+function initState() {
+  const state = new ClientStorage<{ showControls: boolean }>('ui:state');
+  const data = state.get();
+
+  if (!data) {
+    state.set({ showControls: false });
+  }
+
+  return state;
 }

@@ -1,17 +1,19 @@
-import { initializePlugins, PluginMap } from './plugins/index';
 import { emitter } from '@amatiasq/emitter';
-import { PluginContext } from './engine/PluginContext';
+
+import { login } from './login';
+import { PluginContext } from './PluginContext';
+import { initializePlugins, PluginMap } from './plugins/index';
 import { RemoteTelnet } from './remote/RemoteTelnet';
-import { TriggerCollection } from './trigger/TriggerCollection';
+import { TriggerCollection } from './triggers/TriggerCollection';
 import { Context } from './workflow/Context';
 import { Workflow } from './workflow/Workflow';
 import { WorkflowNotFoundError } from './workflow/WorkflowNotFoundError';
-import { login } from './login';
 
 export class Mud {
   private readonly triggers = new TriggerCollection();
   private readonly workflows: Record<string, Workflow> = {};
   private plugins!: PluginMap;
+  private username!: string;
 
   private readonly emitCommand = emitter<string>();
   readonly onCommand = this.emitCommand.subscribe;
@@ -25,7 +27,11 @@ export class Mud {
   async login(user: string, pass: string) {
     const context = new PluginContext('login', 'N/A', this.triggers, this.send);
     await login(context, user, pass);
-    this.initPlugins(user);
+    this.username = user;
+
+    this.plugins = await initializePlugins(
+      name => new PluginContext(name, user, this.triggers, this.send),
+    );
   }
 
   send(text: string) {
@@ -33,10 +39,8 @@ export class Mud {
     this.telnet.send(text);
   }
 
-  private initPlugins(username: string) {
-    this.plugins = initializePlugins(
-      name => new PluginContext(name, username, this.triggers, this.send),
-    );
+  getPlugin<Name extends keyof PluginMap>(name: Name): PluginMap[Name] {
+    return this.plugins[name];
   }
 
   addWorkflow<Args extends any[]>(
@@ -47,7 +51,7 @@ export class Mud {
     return workflow;
   }
 
-  async invokeWorkflow(name: string, params: any[]) {
+  async invokeWorkflow(name: string, params: any[] = []) {
     if (!(name in this.workflows)) {
       throw new WorkflowNotFoundError(`Workflow ${name} is not registered.`);
     }
@@ -62,6 +66,7 @@ export class Mud {
   private createWorkflowContext(name: string) {
     return new Context(
       name,
+      this.username,
       this.triggers,
       this.plugins,
       this.send,
